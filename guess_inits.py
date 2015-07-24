@@ -53,6 +53,17 @@ Ic = 0.0824975
 SBtruth = Ic * (rc/rtruth)
 SBtruth[rtruth > rc] = Ic * (rtruth[rtruth > rc]/rc)**(-4.)
 
+# initialize walkers
+ndim, nwalkers, nthreads = nbins, 80, 8
+p0 = [avg_sb+0.5*avg_sb*np.random.uniform(-1, 1, ndim) for i in range(nwalkers)]
+
+
+
+
 plt.axis([0.01, 1.5, 1e-4, 1e1])
 plt.loglog(rtruth, SBtruth, '-k', cb, avg_sb, 'ob')
+for i in range(nwalkers):
+    plt.loglog(cb, p0[:][i], '.r', alpha=0.1)
+plt.xlabel('radius [arcsec]')
+plt.ylabel('surface brightness [Jy/arcsec**2]')
 plt.savefig('profile.png') 
