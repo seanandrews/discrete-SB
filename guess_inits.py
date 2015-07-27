@@ -3,6 +3,7 @@ import os
 from astropy.io import fits
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+from deprojectVis import deprojectVis
 
 filename = 'data/blind2_fo.combo.noisy.image.fits'
 
@@ -58,12 +59,37 @@ ndim, nwalkers, nthreads = nbins, 80, 8
 p0 = [avg_sb+0.5*avg_sb*np.random.uniform(-1, 1, ndim) for i in range(nwalkers)]
 
 
-
-
+# plot truth, guesses, and initial walker distributions
 plt.axis([0.01, 1.5, 1e-4, 1e1])
 plt.loglog(rtruth, SBtruth, '-k', cb, avg_sb, 'ob')
 for i in range(nwalkers):
-    plt.loglog(cb, p0[:][i], '.r', alpha=0.1)
+    plt.loglog(cb, p0[:][i], '-r', alpha=0.1)
 plt.xlabel('radius [arcsec]')
 plt.ylabel('surface brightness [Jy/arcsec**2]')
 plt.savefig('profile.png') 
+plt.close()
+
+# load the "data" visibilities
+data = np.load('data/blind2_fo.340GHz.vis.npz')
+freq = 340e9
+u = 1e-3*data['u']*freq/2.9979e8
+v = 1e-3*data['v']*freq/2.9979e8
+real = data['Re']
+imag = data['Im']
+wgt = 10000.*data['Wt']
+
+# deproject
+incl = 0.
+PA = 0.
+offset = np.array([0., 0.])
+indata = u, v, real, imag
+dvis = deprojectVis(indata, incl=incl, PA=PA, offset=offset)
+drho, dreal, dimag = dvis
+
+
+
+plt.axis([0, 2000., -0.025, 0.15])
+plt.plot(drho, dreal, '.k', alpha=0.01)
+plt.xlabel('deprojected baseline length [klambda]')
+plt.ylabel('real visibility [Jy]')
+plt.savefig('visprof.png')
