@@ -4,6 +4,7 @@ from astropy.io import fits
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from deprojectVis import deprojectVis
+from discreteModel import discreteModel
 
 filename = 'data/blind2_fo.combo.noisy.image.fits'
 
@@ -35,6 +36,7 @@ a = np.roll(b, 1)
 rin = 0.01/140.
 a[0] = rin
 cb = 0.5*(a+b)
+bins = rin, b
  
 # averge surface brightness in each bin
 avg_sb = np.zeros_like(cb)
@@ -53,6 +55,8 @@ rc = 0.39285714
 Ic = 0.0824975
 SBtruth = Ic * (rc/rtruth)
 SBtruth[rtruth > rc] = Ic * (rtruth[rtruth > rc]/rc)**(-4.)
+tru_sb = Ic * (rc/cb)
+tru_sb[cb > rc] = Ic * (cb[cb > rc]/rc)**(-4.)
 
 # initialize walkers
 ndim, nwalkers, nthreads = nbins, 80, 8
@@ -61,7 +65,7 @@ p0 = [avg_sb+0.5*avg_sb*np.random.uniform(-1, 1, ndim) for i in range(nwalkers)]
 
 # plot truth, guesses, and initial walker distributions
 plt.axis([0.01, 1.5, 1e-4, 1e1])
-plt.loglog(rtruth, SBtruth, '-k', cb, avg_sb, 'ob')
+plt.loglog(rtruth, SBtruth, '-k', cb, avg_sb, 'ob', cb, tru_sb, 'og')
 for i in range(nwalkers):
     plt.loglog(cb, p0[:][i], '-r', alpha=0.1)
 plt.xlabel('radius [arcsec]')
@@ -86,10 +90,36 @@ indata = u, v, real, imag
 dvis = deprojectVis(indata, incl=incl, PA=PA, offset=offset)
 drho, dreal, dimag = dvis
 
+# initial guess visibilities
+ftheta = incl, PA, offset, avg_sb
+uvsamples = u, v
+fmodelvis = discreteModel(ftheta, uvsamples, bins)
+mindata = u, v, fmodelvis.real, fmodelvis.imag
+fvis = deprojectVis(mindata, incl=incl, PA=PA, offset=offset)
+frho, freal, fimag = fvis
+
+# binned truth
+ttheta = incl, PA, offset, tru_sb
+tmodelvis = discreteModel(ttheta, uvsamples, bins)
+mindata = u, v, tmodelvis.real, tmodelvis.imag
+tvis = deprojectVis(mindata, incl=incl, PA=PA, offset=offset)
+trho, treal, timag = tvis
+
 
 
 plt.axis([0, 2000., -0.025, 0.15])
 plt.plot(drho, dreal, '.k', alpha=0.01)
+# loop through initialized walkers
+for i in range(nwalkers):
+    guess_sb = p0[:][i]
+    gtheta = incl, PA, offset, guess_sb
+    gmodelvis = discreteModel(gtheta, uvsamples, bins)
+    gindata = u, v, gmodelvis.real, gmodelvis.imag
+    gvis = deprojectVis(gindata, incl=incl, PA=PA, offset=offset)
+    grho, greal, gimag = gvis
+    plt.plot(grho, greal, '.r', alpha=0.008)
+plt.plot(frho, freal, '.b', alpha=0.01)
+plt.plot(trho, treal, '.g', alpha=0.01)
 plt.xlabel('deprojected baseline length [klambda]')
 plt.ylabel('real visibility [Jy]')
 plt.savefig('visprof.png')
