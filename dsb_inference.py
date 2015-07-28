@@ -63,3 +63,14 @@ f.write("{0:f}   {1:f}   {2:f}\n".format((toc-tic0)/3600., (toc-tic0)/3600., \
                                          iter))
 f.close()
 
+
+for i in range(49):
+    tic = time.time()
+    sampler.run_mcmc(sampler.chain[:, -1, :], iter)
+    toc = time.time()
+    np.save('chain', sampler.chain)
+    f = open("notes.dat", "a")
+    f.write("{0:f}   {1:f}   {2:f}\n".format((toc-tic0)/3600., \
+                                             (toc-tic)/3600., \
+                                             (2+i)*iter))
+    f.close()
