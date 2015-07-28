@@ -66,19 +66,24 @@ SBtruth[rtruth > rc] = Ic * (rtruth[rtruth > rc]/rc)**(-4.)
 
 
 # initialize walkers
-ndim, nwalkers, nthreads = nbins, 80, 8
-scl = 0.5*np.ones_like(guess_sb)
-scl[cb < 3600.*hdr['BMAJ']] = 0.9
-p0 = [guess_sb*(1.+scl*np.random.uniform(-1, 1, ndim)) for i in range(nwalkers)]
+ndim, nwalkers, nthreads = nbins+4, 80, 8
+sb_scl = 0.5*np.ones_like(guess_sb)
+sb_scl[cb < 3600.*hdr['BMAJ']] = 0.9
+p0 = np.zeros((nwalkers, ndim))
+
+guess_geo = np.zeros(4)
+geo_scl = np.ones_like(guess_geo)
+geo_scl[2:] = 0.05
 
 for i in range(nwalkers):
     mono = False
     indx = 0
     while (mono == False):
-        ptrial = guess_sb*(1.+scl*np.random.uniform(-1, 1, ndim))
-        mono = np.array_equal(np.sort(ptrial), ptrial[::-1])
+        sbtrial = guess_sb*(1.+sb_scl*np.random.uniform(-1, 1, nbins))
+        mono = np.array_equal(np.sort(sbtrial), sbtrial[::-1])
         indx += 1
-    p0[i][:] = ptrial
+    geotrial = guess_geo+geo_scl*np.random.uniform(-1, 1, 4)
+    p0[i][:] = np.concatenate((geotrial, sbtrial))
 
 
 # plot initial ball of guesses for surface brightness profile
@@ -86,12 +91,11 @@ plt.axis([0.01, 1.5, 1e-4, 1e1])
 plt.loglog(radius, data_image/omega_beam, '.y', alpha=0.01)
 plt.loglog(rtruth, SBtruth, 'k-', cb, guess_sb, 'oc')
 for i in range(nwalkers):
-    plt.loglog(cb, p0[:][i], '-r', alpha=0.1)
+    plt.loglog(cb, p0[i][4:], '-r', alpha=0.1)
 plt.xlabel('radius [arcsec]')
 plt.ylabel('surface brightness [Jy/arcsec**2]')
 plt.savefig('blind2_fo.profile.png')
 plt.close()
-
 
 
 # load the "data" visibilities
@@ -132,8 +136,7 @@ plt.axis([0, 2000., -0.025, 0.15])
 plt.plot(drho, dreal, '.y', alpha=0.01)
 # loop through initialized walkers
 for i in range(nwalkers):
-    guess_sb = p0[:][i]
-    gtheta = incl, PA, offset, guess_sb
+    gtheta = p0[i][0], p0[i][1], np.array([p0[i][2], p0[i][3]]), p0[i][4:]
     gmodelvis = discreteModel(gtheta, uvsamples, bins)
     gindata = u, v, gmodelvis.real, gmodelvis.imag
     gvis = deprojectVis(gindata, incl=incl, PA=PA, offset=offset)
