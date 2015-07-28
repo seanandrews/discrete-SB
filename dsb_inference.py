@@ -13,6 +13,7 @@ prefix  = 'blind2_fo'
 imfile  = prefix+'.combo.noisy'
 visfile = prefix+'.340GHz'
 
+
 # bin locations
 nbins = 20
 b = 0.05 + 0.05*np.arange(nbins)
@@ -22,16 +23,18 @@ a[0] = rin
 cb = 0.5*(a+b)
 bins = rin, b
 
+
 # guess initial surface brightnesses in these bins, using synthesized image
 im_in = 'data/'+imfile+'.image.fits'
 guess_sb = guess_inits(im_in, bins)
+
 
 # initialize walkers
 ndim, nwalkers, nthreads = nbins, 80, 8
 p0 = [guess_sb*(1.+0.5*np.random.uniform(-1, 1, ndim)) for i in range(nwalkers)]
 
 
-# plot guesses
+# plot initial ball of guesses for surface brightness profile
 plt.axis([0.01, 1.5, 1e-4, 1e1])
 plt.loglog(cb, guess_sb, 'ob')
 for i in range(nwalkers):
@@ -42,21 +45,15 @@ plt.savefig(prefix+'.profile.png')
 plt.close()
 
 
-sys.exit()
-
-# initialize walkers
-ndim, nwalkers, nthreads = nbins, 80, 8
-p0 = [avg_sb+0.5*avg_sb*np.random.uniform(-1, 1, ndim) for i in range(nwalkers)]
-
-
 # load the "data" visibilities
-data = np.load('data/blind2_fo.340GHz.vis.npz')
+data = np.load('data/'+visfile+'.vis.npz')
 freq = 340e9
 u = 1e-3*data['u']*freq/2.9979e8
 v = 1e-3*data['v']*freq/2.9979e8
 real = data['Re']
 imag = data['Im']
 wgt = 10000.*data['Wt']
+
 
 # deproject
 incl = 0.
