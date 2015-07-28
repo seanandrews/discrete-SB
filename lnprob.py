@@ -19,9 +19,9 @@ def lnprob(p, data, bins):
     if (np.array_equal(np.sort(sbs), sbs[::-1]) == False):
         return -np.inf
 
-    # (temporary) enforce face-on, centered viewpoint
-    #if (incl != 0. or PA !=0. or offset != [0., 0.]):
-    #    return -np.inf
+    # geometry common sense
+    if (incl < 0. or incl > 90. or PA < 0. or PA > 180.):
+        return -np.inf
 
 
     # unpack data

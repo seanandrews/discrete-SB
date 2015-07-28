@@ -82,8 +82,9 @@ for i in range(nwalkers):
         sbtrial = guess_sb*(1.+sb_scl*np.random.uniform(-1, 1, nbins))
         mono = np.array_equal(np.sort(sbtrial), sbtrial[::-1])
         indx += 1
-    geotrial = guess_geo+geo_scl*np.random.uniform(-1, 1, 4)
-    p0[i][:] = np.concatenate((geotrial, sbtrial))
+    geotrial = guess_geo[0:1]+geo_scl[0:1]*np.random.uniform(0, 1, 2)
+    offtrial = guess_geo[2:3]+geo_scl[2:3]*np.random.uniform(-1, 1, 2)
+    p0[i][:] = np.concatenate((geotrial, offtrial, sbtrial))
 
 
 # plot initial ball of guesses for surface brightness profile

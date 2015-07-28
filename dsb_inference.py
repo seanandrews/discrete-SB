@@ -2,7 +2,6 @@ import numpy as np
 import os
 import time
 import sys
-from astropy.io import fits
 from lnprob import lnprob
 import emcee
 
@@ -27,6 +26,9 @@ imag = visdata['Im']
 wgt = 10000.*visdata['Wt']
 data = u, v, real, imag, wgt
 
+
+# - INITIALIZE MCMC
+
 # initialize walkers
 ndim, nwalkers, nthreads = nbins+4, 80, 8
 
@@ -34,5 +36,30 @@ ndim, nwalkers, nthreads = nbins+4, 80, 8
 p0 = np.load('p0.npz')['p0']
 
 
-# trial likelihood calculation
-print(-2.*lnprob(p0[:][0], data, bins))
+# - SAMPLE POSTERIOR
+
+# create a file to store progress information
+os.system('rm notes.dat')
+f = open("notes.dat", "w")
+f.close()
+
+# initialize sampler
+sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, threads=nthreads, \
+                                args=[data, bins])
+
+# emcee sampler; track time
+iter = 100
+tic0 = time.time()
+sampler.run_mcmc(p0, iter)
+toc = time.time()
+print(toc-tic0)
+
+# save the results in a binary file
+np.save('chain', sampler.chain)
+
+# add a note
+f = open("notes.dat", "a")
+f.write("{0:f}   {1:f}   {2:f}\n".format((toc-tic0)/3600., (toc-tic0)/3600., \
+                                         iter))
+f.close()
+
