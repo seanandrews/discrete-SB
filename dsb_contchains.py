@@ -1,4 +1,5 @@
 import numpy as np
+from astropy.io import ascii
 import os
 import time
 import sys
