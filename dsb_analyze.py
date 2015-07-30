@@ -26,7 +26,7 @@ ndim, nwalkers, nthreads = nbins+4, 80, 8
 
 chain = np.load('chain.npy')
 fchain = chain.reshape(-1, ndim)
-trial  = np.arange(np.shape(chain)[1])   #/1000.
+trial  = np.arange(np.shape(chain)[1])/1000.
 
 # plot chain progress for SB values
 fig = plt.figure(1)
