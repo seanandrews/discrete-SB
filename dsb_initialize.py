@@ -60,16 +60,15 @@ Ic = 0.0824975
 rc = 55./140.
 SBtruth = Ic * (rc/rtruth)
 SBtruth[rtruth > rc] = Ic * (rtruth[rtruth > rc]/rc)**(-4.)
-#tru_sb = Ic * (rc/cb)
-#tru_sb[cb > rc] = Ic * (cb[cb > rc]/rc)**(-4.)
-
 
 
 # initialize walkers
 ndim, nwalkers, nthreads = nbins+4, 80, 8
 sb_scl = 0.5*np.ones_like(guess_sb)
-sb_scl[cb < 3600.*hdr['BMAJ']] = 0.9
+#sb_scl[cb < 0.5*3600.*hdr['BMAJ']] = 0.9
+unrslvd = np.where(cb < 0.5*3600.*hdr['BMAJ'])
 p0 = np.zeros((nwalkers, ndim))
+
 
 guess_geo = np.zeros(4)
 geo_scl = np.ones_like(guess_geo)
@@ -80,6 +79,8 @@ for i in range(nwalkers):
     indx = 0
     while (mono == False):
         sbtrial = guess_sb*(1.+sb_scl*np.random.uniform(-1, 1, nbins))
+        sbtrial[unrslvd] = guess_sb[unrslvd] * \
+                           (1.+3.*np.random.uniform(0, 1, len(unrslvd)))
         mono = np.array_equal(np.sort(sbtrial), sbtrial[::-1])
         indx += 1
     geotrial = guess_geo[0:1]+geo_scl[0:1]*np.random.uniform(0, 1, 2)

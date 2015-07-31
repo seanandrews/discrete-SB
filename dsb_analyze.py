@@ -25,6 +25,7 @@ ndim, nwalkers, nthreads = nbins+4, 80, 8
 
 
 chain = np.load('chain.npy')
+#chain = np.concatenate((startchain, contchain), 1)
 fchain = chain.reshape(-1, ndim)
 trial  = np.arange(np.shape(chain)[1])/1000.
 

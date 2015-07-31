@@ -64,7 +64,7 @@ f.write("{0:f}   {1:f}   {2:f}\n".format((toc-tic0)/3600., (toc-tic0)/3600., \
 f.close()
 
 
-for i in range(49):
+for i in range(299):
     tic = time.time()
     sampler.run_mcmc(sampler.chain[:, -1, :], iter)
     toc = time.time()
